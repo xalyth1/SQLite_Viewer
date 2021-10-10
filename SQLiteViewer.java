@@ -2,17 +2,15 @@ package viewer;
 
 import org.sqlite.SQLiteDataSource;
 
-import javax.sql.DataSource;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
 
 public class SQLiteViewer extends JFrame {
-
-
 
     JTextField textField;
     JButton openButton;
@@ -21,8 +19,6 @@ public class SQLiteViewer extends JFrame {
     JButton executeButton;
     JTable table;
     JScrollPane scrollPane;
-
-
 
     SQLiteDataSource dataSource;
 
@@ -40,7 +36,6 @@ public class SQLiteViewer extends JFrame {
         initializeGUIelements();
         organizeLayout();
         setListeners();
-
 
         setVisible(true);
     }
@@ -73,13 +68,16 @@ public class SQLiteViewer extends JFrame {
 
         JComboBox tablesComboBox = new JComboBox();
         tablesComboBox.setName("TablesComboBox");
+        //tablesComboBox.setEnabled(false);
 
         JTextArea queryTextArea = new JTextArea();
         queryTextArea.setName("QueryTextArea");
+        queryTextArea.setEnabled(false);
         //queryTextArea.setText("SELECT * FROM tablename;");
 
         JButton executeButton = new JButton("Execute");
         executeButton.setName("ExecuteQueryButton");
+        executeButton.setEnabled(false);
 
         MyTableModel model = new MyTableModel();
         model.addTableModelListener(new CustomListener());
@@ -101,6 +99,22 @@ public class SQLiteViewer extends JFrame {
         openButton.addActionListener(actionEvent -> {
             String dbName = textField.getText();
             String path = "jdbc:sqlite:" + dbName;
+
+            System.out.println("Working Directory = " + System.getProperty("user.dir"));
+            File file = new File(System.getProperty("user.dir").toString() + "\\" + dbName);
+            System.out.println(file.exists());
+            if (!file.exists()) {
+                JOptionPane.showMessageDialog(new Frame(), "FILE DOES NOT EXIST!");
+                tablesComboBox.setEnabled(false);
+                queryTextArea.setEnabled(false);
+                executeButton.setEnabled(false);
+            }
+            else {
+                tablesComboBox.setEnabled(true);
+                queryTextArea.setEnabled(true);
+                executeButton.setEnabled(true);
+            }
+
             dataSource = new SQLiteDataSource();
             dataSource.setUrl(path);
             try (Connection con = dataSource.getConnection()) {
@@ -180,6 +194,7 @@ public class SQLiteViewer extends JFrame {
                     //System.out.println("model : " + model.getValueAt(0,1) );
 
                 } catch (SQLException e) {
+                    JOptionPane.showMessageDialog(new Frame(), "SQL QUERY INVALID");
                     e.printStackTrace();
                 }
             }
